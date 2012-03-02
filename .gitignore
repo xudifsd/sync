@@ -1,0 +1,3 @@
+*.o
+sync-server
+sync-client
