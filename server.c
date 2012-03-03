@@ -73,8 +73,10 @@ int main(int argc, char *argv[]){
 			exit(3);
 		} else if (!strcmp(argv[1], "--help")|| !strcmp(argv[1], "-h"))
 			usage(use);
-		else
+		else {
 			path = argv[1];
+			ip = gethostip();
+		}
 	} else if (argc == 3){
 		path = argv[1];
 		port = (!memcmp(argv[2], "-p=", 3))? atoi(argv[2] + 3) : SERVER_PORT;
