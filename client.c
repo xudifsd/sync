@@ -1,5 +1,6 @@
 #include <arpa/inet.h>
 #include <inttypes.h>
+#include <getopt.h>
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
@@ -13,7 +14,7 @@
 #include "wrapper.h"
 #include "write_or_die.h"
 
-static char use[] = "sync-client push <path> <IP> [port]";
+static char use[] = "sync-client push <--host server-IP | -h server-IP> [-p port | --port port] <path>";
 
 static int connect_to(const char *ip, short port){
 	int sock;
@@ -53,28 +54,55 @@ static void send_fd_or_die(int sock, int fd, off_t size){
 }
 
 int main(int argc, char *argv[]){
-	char *path;
-	char *ip;
-	short port;
+	char *path = NULL;
+	char *ip = NULL;
+	short port = 0;
+	int c;
+
 	int fd, sock;
 	char head[HEAD_LEN];
 	struct stat sb;
-	if (argc == 2){
-		if (!strcmp(argv[1], "--version")){
-			printf("%f\n", VERSION);
-			exit(3);
-		} else if (!strcmp(argv[1], "--help") || !strcmp(argv[1], "-h"))
-			usage(use);
-		else
-			usage(use);
-	} else if ((argc == 4 || argc == 5) && !strcmp("push", argv[1])){
-		path = argv[2];
-		ip = argv[3];
-		port = (argc == 5) ? atoi(argv[4]) : SERVER_PORT;
-		if (port == 0)
-			die_on_user_error("unknow port %d", port);
-	} else
+
+	if (memcmp(argv[1], "push", 4))
 		usage(use);
+
+	for (;;){
+		static struct option long_options[] = {
+			{"host", required_argument, NULL, 'h'},
+			{"port", required_argument, NULL, 'p'},
+			{0, 0, 0, 0}
+		};
+
+		c = getopt_long(argc - 1, argv + 1, ":h:p:",
+				long_options, NULL);
+		if (c == -1)
+			break;
+		switch (c) {
+			case 'h':
+				ip = optarg;
+				break;
+			case 'p':
+				port = atoi(optarg);
+				if (port == 0)
+					die_on_user_error("%s is not a valid port", optarg);
+				break;
+			case '?':
+				break;
+			case ':':
+				die_on_user_error("missing argument\n");
+				break;
+			default:
+				die_on_user_error("getopt returned character code 0%o\n", c);
+		}
+	}
+
+	path = argv[optind + 1];
+	if (path == NULL)
+		usage(use);
+	if (ip == NULL)
+		usage(use);
+	if (port == 0)
+		port = SERVER_PORT;
 
 	fd = deflate(path);
 	if (fd < 0)

@@ -10,13 +10,14 @@
 #include <netdb.h>
 #include <ifaddrs.h>
 #include <unistd.h>
+#include <getopt.h>
 #include "compress.h"
 #include "transport.h"
 #include "usage.h"
 #include "wrapper.h"
 #include "write_or_die.h"
 
-static char use[] = "sync-server <recv_path> [-h=ip] [-p=port]";
+static char use[] = "sync-server [-h ip | --host ip] [-p port | --port port] <recv_path>";
 
 /* return static allocated numeric IP address */
 static char *gethostip(){
@@ -58,44 +59,55 @@ static void handle_client(int sock){
 }
 
 int main(int argc, char *argv[]){
-	char *path;
-	short port;
+	char *path = NULL;
+	short port = 0;
+	char *ip = NULL;
+	int c;
+
 	struct stat sb;
 	int sock, cltsock;
 	struct sockaddr_in addr;
 	struct sockaddr cltaddr;
 	char cltip[BUFSIZ];
-	char *ip;
 	socklen_t cltaddrlen;
-	if (argc == 2){
-		if (!strcmp(argv[1], "--version")){
-			printf("%f\n", VERSION);
-			exit(3);
-		} else if (!strcmp(argv[1], "--help")|| !strcmp(argv[1], "-h"))
-			usage(use);
-		else {
-			path = argv[1];
-			ip = gethostip();
+
+	for (;;){
+		static struct option long_options[] = {
+			{"host", required_argument, NULL, 'h'},
+			{"port", required_argument, NULL, 'p'},
+			{0, 0, 0, 0}
+		};
+
+		c = getopt_long(argc, argv, ":h:p:",
+				long_options, NULL);
+		if (c == -1)
+			break;
+		switch (c) {
+			case 'h':
+				ip = optarg;
+				break;
+			case 'p':
+				port = atoi(optarg);
+				if (port == 0)
+					die_on_user_error("%s is not a valid port", optarg);
+				break;
+			case '?':
+				break;
+			case ':':
+				die_on_user_error("missing argument");
+				break;
+			default:
+				die_on_user_error("getopt returned character code 0%o\n", c);
 		}
-	} else if (argc == 3){
-		path = argv[1];
-		port = (!memcmp(argv[2], "-p=", 3))? atoi(argv[2] + 3) : SERVER_PORT;
-		ip = (!memcmp(argv[2], "-h=", 3))? argv[2] + 3 : gethostip();
-	} else if (argc == 4){
-		path = argv[1];
-
-		if (!memcmp(argv[2], "-p=", 3))
-			port = atoi(argv[2] + 3);
-		else if (!memcmp(argv[2], "-h=", 3))
-			ip = argv[2] + 3;
-
-		if (!memcmp(argv[3], "-p=", 3))
-			port = atoi(argv[3] + 3);
-		else if (!memcmp(argv[3], "-h=", 3))
-			ip = argv[3] + 3;
 	}
-	else
+	if (optind < argc)
+		path = argv[optind];
+	if (path == NULL)
 		usage(use);
+	if (ip == NULL)
+		ip = gethostip();
+	if (port == 0)
+		port = SERVER_PORT;
 
 	/**
 	 * child and parent both will use stdout, this will prevent some
