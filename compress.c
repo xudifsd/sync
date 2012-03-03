@@ -5,9 +5,11 @@ int deflate(const char *path){
 	int fd;
 	int status;
 	pid_t cld;
-	fd = mkostemp(template, O_CLOEXEC);
+	fd = mkstemp(template);
+	if (fcntl(fd, F_SETFD, FD_CLOEXEC))
+		die_on_system_error("fcntl");
 	if (fd < 0)
-		die_on_system_error("mkostemp");
+		die_on_system_error("mkstemp");
 
 	switch (cld = fork()){
 		case -1:
@@ -26,9 +28,6 @@ int deflate(const char *path){
 				die_on_user_error("child can not deflate %s", path);
 			break;
 	}
-/*	if (lseek(fd, 0, SEEK_SET))
-		die_on_system_error("lseek");
-		*/
 	return fd;
 }
 
