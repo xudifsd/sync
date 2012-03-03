@@ -6,7 +6,7 @@ named as sync-client.
 USAGE
 The server start using:
 
-$ sync-server <recv_path> [port]
+$ sync-server <recv_path> [-h=ip] [-p=port]
 
 it will recevie file through port which is default to 8081, and put
 recevied file under recv_path which must be directory if existed or server

@@ -44,6 +44,7 @@ static void send_fd_or_die(int sock, int fd, off_t size){
 			die_on_system_error("read");
 		else if (nr == 0)
 			break;
+		write_or_die(sock, buf, nr);
 		transported += nr;
 	}
 	if (transported != size)
@@ -65,8 +66,8 @@ int main(int argc, char *argv[]){
 		} else if (!strcmp(argv[1], "--help") || !strcmp(argv[1], "-h"))
 			usage(use);
 		else
-			die_on_user_error("unknow option");
-	} else if (!strcmp("push", argv[1]) && (argc == 4 || argc == 5)){
+			usage(use);
+	} else if ((argc == 4 || argc == 5) && !strcmp("push", argv[1])){
 		path = argv[2];
 		ip = argv[3];
 		port = (argc == 5) ? atoi(argv[4]) : SERVER_PORT;
@@ -91,4 +92,5 @@ int main(int argc, char *argv[]){
 
 	close(sock);
 	printf("Successfully send %s\n", path);
+	exit(0);
 }

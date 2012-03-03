@@ -1,6 +1,7 @@
 #ifndef TRANSPORT_H
 #define TRANSPORT_H
 
+#include <inttypes.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>

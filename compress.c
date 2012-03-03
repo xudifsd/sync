@@ -1,7 +1,7 @@
 #include "compress.h"
 
 int deflate(const char *path){
-	char template[] = "/tmp/sync_XXXXXX";
+	char template[] = "/tmp/SYNC_deflate_XXXXXX";
 	int fd;
 	int status;
 	pid_t cld;
@@ -15,7 +15,7 @@ int deflate(const char *path){
 			break;
 		case 0:
 			/* child */
-			execlp("tar", "--create", "--file", template, path, (char *)NULL);
+			execlp("tar", "tar", "--create", "--file", template, path, (char *)NULL);
 			die_on_system_error("execlp");
 			break;
 		default:
@@ -26,6 +26,9 @@ int deflate(const char *path){
 				die_on_user_error("child can not deflate %s", path);
 			break;
 	}
+/*	if (lseek(fd, 0, SEEK_SET))
+		die_on_system_error("lseek");
+		*/
 	return fd;
 }
 
@@ -38,7 +41,7 @@ int inflate(const char *path){
 			break;
 		case 0:
 			/* child */
-			execlp("tar", "--extract", "--file", path, (char *)NULL);
+			execlp("tar", "tar", "--extract", "--file", path, (char *)NULL);
 			die_on_system_error("execlp");
 			break;
 		default:

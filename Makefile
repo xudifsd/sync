@@ -6,12 +6,18 @@ CC = gcc
 
 all: sync-server sync-client
 
-sync-client: $(OBJS)
-	$(CC) -o sync-client client.c $(OBJS)
+sync-client: $(OBJS) client.o
+	$(CC) -o sync-client client.o $(OBJS)
 
-sync-server: $(OBJS)
-	$(CC) -o sync-server server.c $(OBJS)
+sync-server: $(OBJS) server.o
+	$(CC) -o sync-server server.o $(OBJS)
 
+
+client.o: $(LIBS) client.c
+	$(CC) $(CFLAGS) client.c
+
+server.o: $(LIBS) server.c
+	$(CC) $(CFLAGS) server.c
 
 compress.o: compress.c $(LIBS)
 	$(CC) $(CFLAGS) compress.c
@@ -29,4 +35,4 @@ write_or_die.o: write_or_die.c $(LIBS)
 	$(CC) $(CFLAGS) write_or_die.c
 
 clean:
-	-rm $(OBJS) sync-server sync-client
+	-rm $(OBJS) sync-server sync-client client.o server.o

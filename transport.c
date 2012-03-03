@@ -9,6 +9,7 @@ off_t parse_head(int fd){
 
 	/* parse version */
 	fp = fdopen(fd, "r");
+	setbuf(fp, NULL);
 	if (fp == NULL){
 		die_on_system_error("fdopen");
 	}
@@ -50,7 +51,7 @@ off_t parse_head(int fd){
 }
 
 char *process_body(int fd, off_t expected_size){
-	static char template[] = "/tmp/SYNC_XXXXXX";
+	static char template[] = "/tmp/SYNC_REC_XXXXXX";
 	char buf[BUFSIZ];
 	struct stat sb;
 	ssize_t nr = 0;
@@ -69,6 +70,7 @@ char *process_body(int fd, off_t expected_size){
 		write_or_die(filefd, buf, nr);
 		received += nr;
 	}
+
 	if (received != expected_size)
 		goto SIZE_ERROR;
 	close(fd);
@@ -80,6 +82,6 @@ char *process_body(int fd, off_t expected_size){
 		goto SIZE_ERROR;
 	return template;
  SIZE_ERROR:
-	die_on_user_error("received unexpected size");
+	die_on_user_error("[%llu] received unexpected size", (uintmax_t)getpid());
 	return NULL;
 }
