@@ -51,6 +51,7 @@ static void handle_client(int sock){
 	char *path;
 	size = parse_head(sock);
 	path = process_body(sock, size);
+	printf("[%llu] inflating\n", (uintmax_t)getpid());
 	if (inflate(path) < 0)
 		die_on_user_error("can not inflate %s", path);
 	printf("[%llu] successfully received %llu length file\n", (uintmax_t)getpid(), (uintmax_t)size);

@@ -34,25 +34,6 @@ static int connect_to(const char *ip, short port){
 	return sock;
 }
 
-/* FIXME finally this should change to copy_fd*/
-static void send_fd_or_die(int sock, int fd, off_t size){
-	char buf[BUFSIZ];
-	off_t transported = 0;
-	ssize_t nr = 0;
-	while (transported < size){
-		nr = xread(fd, buf, BUFSIZ);
-		if (nr < 0)
-			die_on_system_error("read");
-		else if (nr == 0)
-			break;
-		write_or_die(sock, buf, nr);
-		transported += nr;
-	}
-	if (transported != size)
-		die_on_user_error("transport failed");
-	return;
-}
-
 int main(int argc, char *argv[]){
 	char *path = NULL;
 	char *ip = NULL;
@@ -63,7 +44,7 @@ int main(int argc, char *argv[]){
 	char head[HEAD_LEN];
 	struct stat sb;
 
-	if (memcmp(argv[1], "push", 4))
+	if (argc > 1 && memcmp(argv[1], "push", 4))
 		usage(use);
 
 	for (;;){
@@ -104,6 +85,7 @@ int main(int argc, char *argv[]){
 	if (port == 0)
 		port = SERVER_PORT;
 
+	printf("[%llu] deflating\n", (uintmax_t)getpid());
 	fd = deflate(path);
 	if (fd < 0)
 		die_on_user_error("can not use path %s", path);
@@ -116,7 +98,7 @@ int main(int argc, char *argv[]){
 
 	write_or_die(sock, head, strlen(head));
 
-	send_fd_or_die(sock, fd, sb.st_size);
+	copy_between_fd(fd, sock, STDOUT_FILENO, sb.st_size, 1);
 
 	close(sock);
 	printf("Successfully send %s\n", path);

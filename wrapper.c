@@ -47,6 +47,32 @@ ssize_t read_in_full(int fd, void *buf, size_t count){
 	return total;
 }
 
+static void alarm_handler(int sig){
+	/**
+	  * This is for read_with_timeout. We do nothing, we just use alarm
+	  * to interrupt blocked reading
+	 */
+}
+
+/**
+ * read_with_timeout is same as read_in_full, but use timeout to prevent
+ * waste time in reading, this is especially useful in network transport.
+ */
+ssize_t read_with_timeout(int fd, void *buf, size_t count, unsigned int sec){
+	ssize_t nr;
+	struct sigaction sa;
+
+	sa.sa_flags = 0;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_handler = &alarm_handler;
+	if (sigaction(SIGALRM, &sa, NULL) == -1)
+		error("sighandler can not be established");
+	alarm(sec);
+	nr = read_in_full(fd, buf, count);
+	alarm(0); /* cancel alarm */
+	return nr;
+}
+
 /**
  * xwrite auto restart when encounter a restartable error.
  */

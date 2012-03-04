@@ -1,5 +1,6 @@
 #include "transport.h"
 
+/* FIXME use timeout to parse head */
 off_t parse_head(int fd){
 	double version;
 	off_t length;
@@ -52,24 +53,13 @@ off_t parse_head(int fd){
 
 char *process_body(int fd, off_t expected_size){
 	static char template[] = "/tmp/SYNC_REC_XXXXXX";
-	char buf[BUFSIZ];
 	struct stat sb;
-	ssize_t nr = 0;
 	off_t received = 0;
 	int filefd;
 
 	filefd = mkstemp(template);
 
-	/* FIXME share code with client.c: send_fd_or_die */
-	while (received < expected_size){
-		nr = xread(fd, buf, BUFSIZ);
-		if (nr < 0)
-			die_on_system_error("read from socket");
-		if (nr == 0)
-			break;
-		write_or_die(filefd, buf, nr);
-		received += nr;
-	}
+	received = copy_between_fd(fd, filefd, -1, expected_size, 0);
 
 	if (received != expected_size)
 		goto SIZE_ERROR;
