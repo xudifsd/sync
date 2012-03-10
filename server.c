@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -46,9 +47,22 @@ static char *gethostip(){
 	return host;
 }
 
+
+/* FIXME: I should go to some file like signalchain.c */
+static void do_nothing(int sig){
+	/* I was used to prevent SIGPIPE */
+	return;
+}
+
 static void handle_client(int sock){
 	off_t size;
 	char *path;
+	struct sigaction sa;
+
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = SA_RESTART;
+	sa.sa_handler = &do_nothing;
+
 	size = parse_head(sock);
 	path = process_body(sock, size);
 	printf("[%llu] inflating\n", (uintmax_t)getpid());
