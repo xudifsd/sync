@@ -1,0 +1,3 @@
+* use timeout when parse head, maybe use alarm before parse head
+* some library should not use die_*
+* use sendfile(), config TCP_CORK flag
