@@ -7,7 +7,7 @@
 #include <signal.h> /* for read_with_timeout */
 #include "usage.h"
 
-#define TIMEOUT 2
+#define TIMEOUT 10
 
 extern void *xmalloc(size_t size);
 extern void *xrealloc(void *ptr, size_t size);

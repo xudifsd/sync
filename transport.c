@@ -26,7 +26,7 @@ off_t parse_head(int fd){
 	if (version == 0)
 		goto CORRUPT;
 	if (version > VERSION)
-		die_on_user_error("version %f is not supported in current version %f", version, VERSION);
+		die_on_user_error("version %.2f is not supported in current version %.2f", version, VERSION);
 
 	/* parse length*/
 	if (fgets(line, 1024, fp) == NULL)
@@ -44,7 +44,8 @@ off_t parse_head(int fd){
 	if (fgets(line, 1024, fp) == NULL)
 		goto CORRUPT;
 	if (strlen(line) != 1 || memcmp(line, "\n", 1))
-		goto CORRUPT;
+		if (strlen(line) != 2 || memcmp(line, "\r\n", 2))
+			goto CORRUPT;
 	return length;
  CORRUPT:
 	die_on_user_error("parse_head: corrupt header");

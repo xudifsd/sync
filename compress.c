@@ -34,7 +34,6 @@ int deflate(const char *path){
 
 int inflate(const char *path){
 	pid_t cld;
-	char *path1 = strdup(path);
 	int status;
 	switch (cld = fork()){
 		case -1:
@@ -42,7 +41,7 @@ int inflate(const char *path){
 			break;
 		case 0:
 			/* child */
-			execlp("tar", "tar", "--extract", "--gzip", "--file", path1, (char *)NULL);
+			execlp("tar", "tar", "--extract", "--gzip", "--file", path, (char *)NULL);
 			die_on_system_error("execlp");
 			break;
 		default:
@@ -50,7 +49,7 @@ int inflate(const char *path){
 			if (waitpid(cld, &status, 0) < 0)
 				die_on_system_error("waitpid");
 			if (status != 0)
-				die_on_user_error("child can not inflate %s", path1);
+				die_on_user_error("child can not inflate %s", path);
 			break;
 	}
 	return 0;
