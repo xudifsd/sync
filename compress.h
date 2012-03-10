@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
+#include <libgen.h>
 #include <fcntl.h>
 #include <sys/wait.h>
 
