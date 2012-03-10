@@ -1,6 +1,6 @@
 CFLAGS = -Wall -g -c
-OBJS = compress.o transport.o usage.o wrapper.o write_or_die.o
-LIBS = compress.h transport.h usage.h wrapper.h write_or_die.h
+OBJS = compress.o file.o transport.o usage.o wrapper.o write_or_die.o
+LIBS = compress.h file.h transport.h usage.h wrapper.h write_or_die.h
 CC = gcc
 
 
@@ -15,6 +15,9 @@ sync-server: $(OBJS) server.o
 
 client.o: $(LIBS) client.c
 	$(CC) $(CFLAGS) client.c
+
+file.o: $(LIBS) file.c
+	$(CC) $(CFLAGS) file.c
 
 server.o: $(LIBS) server.c
 	$(CC) $(CFLAGS) server.c

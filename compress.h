@@ -3,9 +3,12 @@
 
 #include <unistd.h>
 #include <stdio.h>
+#include <string.h>
 #include <limits.h>
 #include <fcntl.h>
 #include <sys/wait.h>
+
+#include "file.h"
 #include "usage.h"
 
 extern int deflate(const char *path);

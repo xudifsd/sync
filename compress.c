@@ -1,15 +1,14 @@
 #include "compress.h"
 
 int deflate(const char *path){
-	char template[] = "/tmp/SYNC_deflate_XXXXXX";
+	char *template = strdup("/tmp/SYNC_deflate_XXXXXX");
 	int fd;
 	int status;
 	pid_t cld;
-	fd = mkstemp(template);
-	if (fcntl(fd, F_SETFD, FD_CLOEXEC))
-		die_on_system_error("fcntl");
+
+	fd = create_tmp(template);
 	if (fd < 0)
-		die_on_system_error("mkstemp");
+		die_on_user_error("could not create temp file");
 
 	switch (cld = fork()){
 		case -1:

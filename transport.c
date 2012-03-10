@@ -52,12 +52,14 @@ off_t parse_head(int fd){
 }
 
 char *process_body(int fd, off_t expected_size){
-	static char template[] = "/tmp/SYNC_REC_XXXXXX";
+	char *template = strdup("/tmp/SYNC_REC_XXXXXX");
 	struct stat sb;
 	off_t received = 0;
 	int filefd;
 
-	filefd = mkstemp(template);
+	filefd = create_tmp(template);
+	if (fd < 0)
+		die_on_user_error("could not create temp file");
 
 	received = copy_between_fd(fd, filefd, -1, expected_size, 0);
 

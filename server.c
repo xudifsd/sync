@@ -56,7 +56,7 @@ static void handle_client(int sock){
 		die_on_user_error("can not inflate %s", path);
 	printf("[%llu] successfully received %llu length file\n", (uintmax_t)getpid(), (uintmax_t)size);
 	fflush(stdout);
-	_exit(0);
+	exit(0);
 }
 
 int main(int argc, char *argv[]){

@@ -8,6 +8,8 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
+
+#include "file.h"
 #include "usage.h"
 #include "wrapper.h"
 #include "write_or_die.h"
