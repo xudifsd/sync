@@ -3,6 +3,7 @@ OBJS = compress.o file.o transport.o usage.o wrapper.o write_or_die.o
 LIBS = compress.h file.h transport.h usage.h wrapper.h write_or_die.h
 CC = gcc
 
+PREFIX = $(HOME)
 
 all: sync-server sync-client
 
@@ -39,3 +40,9 @@ write_or_die.o: write_or_die.c $(LIBS)
 
 clean:
 	-rm $(OBJS) sync-server sync-client client.o server.o
+
+install: all
+	cp sync-server sync-client $(PREFIX)/bin
+	
+uninstall:
+	-rm $(PREFIX)/bin/sync-server $(PREFIX)/bin/sync-client
