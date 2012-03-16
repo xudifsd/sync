@@ -18,8 +18,8 @@ will create it.
 And the client start using:
 
 ``` bash
-$ sync-client push <--host server-IP | -h server-IP> [-p port | --port port] <path>
+$ sync-client [push|get] <--host server-IP | -h server-IP> [-p port | --port port] <path>
 ```
 
-it will push the file or the all contents under directory to server which
+you can push file or get file from server which
 is specified by `server-IP` and `port`(which is default to `8081`).

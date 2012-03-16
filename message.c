@@ -1,19 +1,24 @@
 #include "message.h"
+//#define DEBUG 1
 
-/* FIXME use timeout to parse head */
-off_t parse_request_head(int fd){
-	double version;
-	off_t length;
+/**
+ * return static allocated structure, return NULL on error.
+ * FIXME use timeout to parse head.
+ */
+struct message *parse_request_head(int fd){
+	static struct message msg;
 	FILE *fp;
 	char line[1024];
 	char *p;
 
+	memset(&msg, 0, sizeof(msg));
+
 	/* parse version */
 	fp = fdopen(fd, "r");
 	setbuf(fp, NULL);
-	if (fp == NULL){
-		die_on_system_error("fdopen");
-	}
+	if (fp == NULL)
+		return NULL;
+
 	if (fgets(line, 1024, fp) == NULL)
 		goto CORRUPT;
 	if (memcmp("SYNC", line, 4))
@@ -22,13 +27,33 @@ off_t parse_request_head(int fd){
 	if (p == NULL)
 		goto CORRUPT;
 	p++;
-	version = atof(p);
-	if (version == 0)
+	msg.version = atof(p);
+	if (msg.version == 0)
 		goto CORRUPT;
-	if (version > VERSION)
-		die_on_user_error("version %.2f is not supported in current version %.2f", version, VERSION);
+	/* FIXME use error and return NULL instead of die_on_user_error */
+	if (msg.version > VERSION)
+		die_on_user_error("version %.2f is not supported in current version %.2f", msg.version, VERSION);
+#ifdef DEBUG
+	fprintf(stderr, "version is %.2f\n", msg.version);
+#endif
 
-	/* parse length*/
+	/* parse action */
+	if (fgets(line, 1024, fp) == NULL)
+		goto CORRUPT;
+#ifdef DEBUG
+	fprintf(stderr, "line is %s\n", line);
+#endif
+	if (!strcmp("PUSH\n", line))
+		msg.action = PUSH;
+	else if (!strcmp("GET\n", line))
+		msg.action = GET;
+	else
+		goto CORRUPT;
+#ifdef DEBUG
+	fprintf(stderr, "action is %d\n", msg.action);
+#endif
+
+	/* parse length */
 	if (fgets(line, 1024, fp) == NULL)
 		goto CORRUPT;
 	if (memcmp("LENGTH", line, 6))
@@ -37,8 +62,8 @@ off_t parse_request_head(int fd){
 	if (p == NULL)
 		goto CORRUPT;
 	p++;
-	length = atoll(p);
-	if (length == 0)
+	msg.length = atoll(p);
+	if (msg.length == 0)
 		goto CORRUPT;
 
 	if (fgets(line, 1024, fp) == NULL)
@@ -46,13 +71,16 @@ off_t parse_request_head(int fd){
 	if (strlen(line) != 1 || memcmp(line, "\n", 1))
 		if (strlen(line) != 2 || memcmp(line, "\r\n", 2))
 			goto CORRUPT;
-	return length;
+#ifdef DEBUG
+	fprintf(stderr, "length is %lld\n", (uintmax_t)msg.length);
+#endif
+	return &msg;
  CORRUPT:
-	die_on_user_error("parse_request_head: corrupt header");
-	return 0;
+	close(fd);
+	return NULL;
 }
 
-char *process_request_body(int fd, off_t expected_size){
+char *handle_push(int fd, off_t expected_size){
 	char *template = strdup("/tmp/SYNC_REC_XXXXXX");
 	struct stat sb;
 	off_t received = 0;
@@ -80,11 +108,32 @@ char *process_request_body(int fd, off_t expected_size){
 }
 
 /**
+ * FIXME implement get method. The request of get should like this:
+ * SYNC:0.2
+ * GET
+ * LENGTH:xxx
+ * '\n'
+ * path1
+ * path2
+ * ...
+ */
+int handle_get(int fd, size_t expected_size){
+	return 0;
+}
+
+/**
  * This return the number byte that actually written to request,and caller
  * should ensure the request have enought space, they can use HEAD_LEN for
  * that.
  * Currently, we can only use PUSH in action, GET is not supported yet.
  */
 int generate_request_header(int action, off_t length, char *request, size_t count){
-	return snprintf(request, count, HEAD_FMT, VERSION, (uintmax_t)length);
+	int nr;
+	if (action == PUSH)
+		nr = snprintf(request, count, HEAD_FMT, VERSION, "PUSH", (uintmax_t)length);
+	else if (action == GET)
+		nr = snprintf(request, count, HEAD_FMT, VERSION, "GET", (uintmax_t)length);
+	else
+		nr = 0;
+	return nr;
 }

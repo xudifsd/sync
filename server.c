@@ -22,22 +22,30 @@ static void do_nothing(int sig){
 }
 
 static void handle_client(int sock){
-	off_t size;
 	char *path;
+	struct message *msg;
 	struct sigaction sa;
 
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags = SA_RESTART;
 	sa.sa_handler = &do_nothing;
 
-	size = parse_request_head(sock);
-	path = process_request_body(sock, size);
-	printf("[%llu] inflating\n", (uintmax_t)getpid());
-	if (inflate(path) < 0)
-		die_on_user_error("can not inflate %s", path);
-	printf("[%llu] successfully received %llu length file\n", (uintmax_t)getpid(), (uintmax_t)size);
-	fflush(stdout);
-	exit(0);
+	msg = parse_request_head(sock);
+	if (msg == NULL)
+		die_on_user_error("[%llu] corruppt header", (uintmax_t)getpid());
+
+	if (msg->action == PUSH){
+		path = handle_push(sock, msg->length);
+
+		printf("[%llu] inflating\n", (uintmax_t)getpid());
+		if (inflate(path) < 0)
+			die_on_user_error("can not inflate %s", path);
+		printf("[%llu] successfully received %llu length file\n", (uintmax_t)getpid(), (uintmax_t)msg->length);
+		fflush(stdout);
+		exit(0);
+	} else if (msg->action == GET){
+		exit(handle_get(sock, msg->length));
+	}
 }
 
 static int run(const char *ip, short port, unsigned int pending){
