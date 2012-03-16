@@ -9,23 +9,23 @@ int deflate(const char *path){
 
 	fd = create_tmp(template);
 	if (fd < 0)
-		die_on_user_error("could not create temp file");
+		return error("could not create temp file");
 
 	switch (cld = fork()){
 		case -1:
-			die_on_system_error("fork");
+			fatal("fork error");
 			break;
 		case 0:
 			/* child */
 			execlp("tar", "tar", "--create", "--gzip", "--file", template, "--directory", dirname(path1), basename(path1), (char *)NULL);
-			die_on_system_error("execlp");
+			fatal("could not execlp, maybe you did not installed tar");
 			break;
 		default:
 			/* father */
 			if (waitpid(cld, &status, 0) < 0)
-				die_on_system_error("waitpid");
+				fatal("waitpid error");
 			if (status != 0)
-				die_on_user_error("child can not deflate %s", path);
+				return error("child can not deflate %s", path);
 			break;
 	}
 	free(path1);
@@ -37,19 +37,19 @@ int inflate(const char *path){
 	int status;
 	switch (cld = fork()){
 		case -1:
-			die_on_system_error("fork");
+			fatal("fork error");
 			break;
 		case 0:
 			/* child */
 			execlp("tar", "tar", "--extract", "--gzip", "--file", path, (char *)NULL);
-			die_on_system_error("execlp");
+			fatal("could not execlp, maybe you did not installed tar");
 			break;
 		default:
 			/* father */
 			if (waitpid(cld, &status, 0) < 0)
-				die_on_system_error("waitpid");
+				fatal("waitpid");
 			if (status != 0)
-				die_on_user_error("child can not inflate %s", path);
+				return error("child can not inflate %s", path);
 			break;
 	}
 	return 0;

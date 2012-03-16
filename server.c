@@ -32,14 +32,14 @@ static void handle_client(int sock){
 
 	msg = parse_request_head(sock);
 	if (msg == NULL)
-		die_on_user_error("[%llu] corruppt header", (uintmax_t)getpid());
+		fatal("[%llu] corruppt header", (uintmax_t)getpid());
 
 	if (msg->action == PUSH){
 		path = handle_push(sock, msg->length);
 
 		printf("[%llu] inflating\n", (uintmax_t)getpid());
 		if (inflate(path) < 0)
-			die_on_user_error("can not inflate %s", path);
+			fatal("can not inflate %s", path);
 		printf("[%llu] successfully received %llu length file\n", (uintmax_t)getpid(), (uintmax_t)msg->length);
 		fflush(stdout);
 		exit(0);
@@ -56,23 +56,23 @@ static int run(const char *ip, short port, unsigned int pending){
 
 	sock = bind_to(ip, port);
 	if (sock < 0)
-		die_on_user_error("can not bind to %s:%d", ip, port);
+		fatal("can not bind to %s:%d", ip, port);
 	printf("bind to %s\n", ip);
 
 	if (listen(sock, pending))
-		die_on_system_error("listen");
+		fatal("listen error");
 
 	for (;;){
 		cltsock = accept(sock, &cltaddr, &cltaddrlen);
 		if (cltsock < 0)
-			die_on_system_error("accept");
+			fatal("accept error");
 		if (inet_ntop(AF_INET, &cltaddr, cltip, cltaddrlen) == NULL)
-			die_on_system_error("inet_ntop");
+			error("inet_ntop error when geting client's address");
 		printf("accept from %s\n", cltip);
 		fflush(stdout);
 		switch (fork()){
 			case -1:
-				die_on_system_error("fork");
+				fatal("fork");
 				break;
 			case 0:
 				/* child */
@@ -113,15 +113,15 @@ int main(int argc, char *argv[]){
 			case 'p':
 				port = atoi(optarg);
 				if (port == 0)
-					die_on_user_error("%s is not a valid port", optarg);
+					fatal("%s is not a valid port", optarg);
 				break;
 			case '?':
 				break;
 			case ':':
-				die_on_user_error("missing argument");
+				fatal("missing argument");
 				break;
 			default:
-				die_on_user_error("getopt returned character code 0%o\n", c);
+				fatal("getopt returned character code 0%o\n", c);
 		}
 	}
 	if (optind < argc)
@@ -141,16 +141,16 @@ int main(int argc, char *argv[]){
 	if (stat(path, &sb)){
 		if (errno == ENOENT){
 			if (mkdir(path, 0766))
-				die_on_system_error("mkdir");
+				fatal("could not use path as recv dir");
 		} else
-			die_on_system_error("stat");
+			fatal("could stat %s", path);
 	}
 	else
 		if (!S_ISDIR(sb.st_mode))
-			die_on_user_error("%s is not directory", path);
+			fatal("%s is not directory", path);
 
 	if (chdir(path))
-		die_on_system_error("chdir");
+		fatal("could not change dir to %s", path);
 
 	exit(run(ip, port, 20));
 }

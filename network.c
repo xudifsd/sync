@@ -10,8 +10,11 @@ char *gethostip(){
 	int family, s;
 	static char host[NI_MAXHOST];
 
-	if (getifaddrs(&ifaddr) == -1)
-		die_on_system_error("getifaddrs");
+	if (getifaddrs(&ifaddr) == -1){
+		error("getifaddrs error");
+		strcpy(host, "127.0.0.1");
+		return host;
+	}
 
 	for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
 		family = ifa->ifa_addr->sa_family;
@@ -25,7 +28,7 @@ char *gethostip(){
 		s = getnameinfo(ifa->ifa_addr, sizeof(struct sockaddr_in),
 				host, NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
 		if (s != 0)
-			die_on_user_error("getnameinfo() failed: %s\n", gai_strerror(s));
+			error("getnameinfo() failed: %s", gai_strerror(s));
 	}
 	freeifaddrs(ifaddr);
 	if (!memcmp(host, "", 1))
@@ -40,14 +43,14 @@ int connect_to(const char *ip, short port){
 	memset(&addr, 0, sizeof(addr));
 	addr.sin_family = AF_INET;
 	if (inet_pton(AF_INET, ip, &addr.sin_addr) != 1)
-		die_on_user_error("unknow IP: %s\n", ip);
+		return error("unknow IP: %s", ip);
 	addr.sin_port = htons(port);
 
 	sock = socket(AF_INET, SOCK_STREAM, 0);
 	if (sock < 0)
-		die_on_system_error("socket");
+		return error("could create socket");
 	if (connect(sock, (struct sockaddr *)&addr, sizeof(addr)) < 0)
-		die_on_system_error("connect");
+		return error("could not connect to %s", ip);
 	return sock;
 }
 

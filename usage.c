@@ -5,22 +5,18 @@ void usage(const char *err){
 	exit(3);
 }
 
-void error(const char *fmt, ...){
+int error(const char *fmt, ...){
 	va_list args;
 	va_start(args, fmt);
 	vfprintf(stderr, fmt, args);
 	va_end(args);
 	fputc('\n', stderr);
 
-	return;
+	return -1;
 }
 
-void die_on_system_error(const char *err){
-	perror(err);
-	exit(1);
-}
-
-void die_on_user_error(const char *fmt, ...){
+void fatal(const char *fmt, ...){
+	fputs("fatal: ", stderr);
 	va_list args;
 	va_start(args, fmt);
 	vfprintf(stderr, fmt, args);

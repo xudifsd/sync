@@ -30,9 +30,10 @@ struct message *parse_request_head(int fd){
 	msg.version = atof(p);
 	if (msg.version == 0)
 		goto CORRUPT;
-	/* FIXME use error and return NULL instead of die_on_user_error */
-	if (msg.version > VERSION)
-		die_on_user_error("version %.2f is not supported in current version %.2f", msg.version, VERSION);
+	if (msg.version > VERSION){
+		error("version %.2f is not supported in current version %.2f", msg.version, VERSION);
+		return NULL;
+	}
 #ifdef DEBUG
 	fprintf(stderr, "version is %.2f\n", msg.version);
 #endif
@@ -88,7 +89,7 @@ char *handle_push(int fd, off_t expected_size){
 
 	filefd = create_tmp(template);
 	if (fd < 0)
-		die_on_user_error("could not create temp file");
+		fatal("could not create temp file");
 
 	received = copy_between_fd(fd, filefd, -1, expected_size, 0);
 
@@ -98,12 +99,12 @@ char *handle_push(int fd, off_t expected_size){
 	close(filefd);
 
 	if (stat(template, &sb) < 0)
-		die_on_system_error("stat");
+		fatal("could not stat template file %s", template);
 	if (sb.st_size != expected_size)
 		goto SIZE_ERROR;
 	return template;
  SIZE_ERROR:
-	die_on_user_error("[%llu] received unexpected size", (uintmax_t)getpid());
+	fatal("[%llu] received unexpected size", (uintmax_t)getpid());
 	return NULL;
 }
 

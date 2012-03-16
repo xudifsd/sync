@@ -24,9 +24,9 @@ static void make_push(int sock, int fd){
 	char head[HEAD_LEN];
 
 	if (fstat(fd, &sb) < 0)
-		die_on_system_error("fstat");
+		fatal("fstat failed");
 	if (generate_request_header(PUSH, (uintmax_t)sb.st_size, head, HEAD_LEN) == 0)
-		die_on_user_error("can not generate header");
+		fatal("can not generate header");
 
 	write_or_die(sock, head, strlen(head));
 
@@ -80,15 +80,15 @@ int main(int argc, char *argv[]){
 			case 'p':
 				port = atoi(optarg);
 				if (port == 0)
-					die_on_user_error("%s is not a valid port", optarg);
+					fatal("%s is not a valid port", optarg);
 				break;
 			case '?':
 				break;
 			case ':':
-				die_on_user_error("missing argument\n");
+				fatal("missing argument\n");
 				break;
 			default:
-				die_on_user_error("getopt returned character code 0%o\n", c);
+				fatal("getopt returned character code 0%o\n", c);
 		}
 	}
 
@@ -105,12 +105,12 @@ int main(int argc, char *argv[]){
 		printf("[%llu] deflating\n", (uintmax_t)getpid());
 		fd = deflate(path);
 		if (fd < 0)
-			die_on_user_error("can not use path %s", path);
+			fatal("failed to use path %s", path);
 	}
 
 	sock = connect_to(ip, port);
 	if (sock < 0)
-		die_on_user_error("can not connect to %s:%d\n", ip, port);
+		fatal("can not connect to %s:%d\n", ip, port);
 
 	if (action == PUSH)
 		make_push(sock, fd);

@@ -25,14 +25,14 @@ size_t copy_between_fd(int from, int to, int report_fd, off_t expected_size, int
 			return total;
 		if (nr < 0){
 			if (die_on_error)
-				die_on_system_error("read_with_timeout");
+				fatal("timeout when reading");
 			else
 				return total;
 		}
 
 		if (write_in_full(to, buf, nr) < 0){
 			if (die_on_error)
-				die_on_system_error("write_in_full");
+				fatal("write error");
 			else
 				return total;
 		}
@@ -50,6 +50,6 @@ void write_or_die(int fd, void *buf, size_t count){
 	if (write_in_full(fd, buf, count) < 0){
 		if (errno == EPIPE)
 			exit(0);
-		die_on_system_error("write error");
+		fatal("write error");
 	}
 }

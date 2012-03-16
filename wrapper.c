@@ -4,7 +4,7 @@ void *xmalloc(size_t size){
 	void *p;
 	p = malloc(size);
 	if (p == NULL && size != 0)
-		die_on_user_error("out of memory when invoking malloc(%d)", size);
+		fatal("out of memory when invoking malloc(%d)", size);
 	return p;
 }
 
@@ -12,7 +12,7 @@ void *xrealloc(void *ptr, size_t size){
 	void *p;
 	p = realloc(ptr, size);
 	if (p == NULL && size != 0)
-		die_on_user_error("out of memory when invoking realloc(%d)", size);
+		fatal("out of memory when invoking realloc(%d)", size);
 	return p;
 }
 
