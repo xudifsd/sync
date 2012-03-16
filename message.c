@@ -1,7 +1,7 @@
-#include "transport.h"
+#include "message.h"
 
 /* FIXME use timeout to parse head */
-off_t parse_head(int fd){
+off_t parse_request_head(int fd){
 	double version;
 	off_t length;
 	FILE *fp;
@@ -48,11 +48,11 @@ off_t parse_head(int fd){
 			goto CORRUPT;
 	return length;
  CORRUPT:
-	die_on_user_error("parse_head: corrupt header");
+	die_on_user_error("parse_request_head: corrupt header");
 	return 0;
 }
 
-char *process_body(int fd, off_t expected_size){
+char *process_request_body(int fd, off_t expected_size){
 	char *template = strdup("/tmp/SYNC_REC_XXXXXX");
 	struct stat sb;
 	off_t received = 0;
@@ -77,4 +77,14 @@ char *process_body(int fd, off_t expected_size){
  SIZE_ERROR:
 	die_on_user_error("[%llu] received unexpected size", (uintmax_t)getpid());
 	return NULL;
+}
+
+/**
+ * This return the number byte that actually written to request,and caller
+ * should ensure the request have enought space, they can use HEAD_LEN for
+ * that.
+ * Currently, we can only use PUSH in action, GET is not supported yet.
+ */
+int generate_request_header(int action, off_t length, char *request, size_t count){
+	return snprintf(request, count, HEAD_FMT, VERSION, (uintmax_t)length);
 }

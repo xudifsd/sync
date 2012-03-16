@@ -1,6 +1,6 @@
 CFLAGS = -Wall -g -c
-OBJS = compress.o file.o transport.o usage.o wrapper.o write_or_die.o
-LIBS = compress.h file.h transport.h usage.h wrapper.h write_or_die.h
+OBJS = compress.o file.o network.o message.o usage.o wrapper.o write_or_die.o
+LIBS = compress.h file.h network.h message.h usage.h wrapper.h write_or_die.h
 CC = gcc
 
 PREFIX = $(HOME)
@@ -26,8 +26,11 @@ server.o: $(LIBS) server.c
 compress.o: compress.c $(LIBS)
 	$(CC) $(CFLAGS) compress.c
 
-transport.o: transport.c $(LIBS)
-	$(CC) $(CFLAGS) transport.c
+network.o: $(LIBS) network.c
+	$(CC) $(CFLAGS) network.c
+
+message.o: message.c $(LIBS)
+	$(CC) $(CFLAGS) message.c
 
 usage.o: usage.c $(LIBS)
 	$(CC) $(CFLAGS) usage.c

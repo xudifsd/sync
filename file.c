@@ -20,6 +20,6 @@ int create_tmp(char *template){
 	if (fd < 0 || fcntl(fd, F_SETFD, FD_CLOEXEC))
 		return -1;
 
-	atexit(&unlink_tmp);
+	atexit(unlink_tmp);
 	return fd;
 }

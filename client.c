@@ -1,38 +1,18 @@
-#include <arpa/inet.h>
 #include <inttypes.h>
 #include <getopt.h>
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
-#include <sys/types.h>
 #include <sys/stat.h>
-#include <sys/socket.h>
 #include <unistd.h>
 #include "compress.h"
-#include "transport.h"
+#include "network.h"
+#include "message.h"
 #include "usage.h"
 #include "wrapper.h"
 #include "write_or_die.h"
 
 static char use[] = "sync-client push <--host server-IP | -h server-IP> [-p port | --port port] <path>";
-
-static int connect_to(const char *ip, short port){
-	int sock;
-	struct sockaddr_in addr;
-
-	memset(&addr, 0, sizeof(addr));
-	addr.sin_family = AF_INET;
-	if (inet_pton(AF_INET, ip, &addr.sin_addr) != 1)
-		die_on_user_error("unknow IP: %s\n", ip);
-	addr.sin_port = htons(port);
-
-	sock = socket(AF_INET, SOCK_STREAM, 0);
-	if (sock < 0)
-		die_on_system_error("socket");
-	if (connect(sock, (struct sockaddr *)&addr, sizeof(addr)) < 0)
-		die_on_system_error("connect");
-	return sock;
-}
 
 int main(int argc, char *argv[]){
 	char *path = NULL;
@@ -93,8 +73,7 @@ int main(int argc, char *argv[]){
 		die_on_system_error("fstat");
 
 	sock = connect_to(ip, port);
-	if (snprintf(head, HEAD_LEN, HEAD_FMT, VERSION, (uintmax_t)sb.st_size) < 0)
-		die_on_user_error("snprintf");
+	generate_request_header(PUSH, (uintmax_t)sb. st_size, head, HEAD_LEN);
 
 	write_or_die(sock, head, strlen(head));
 
