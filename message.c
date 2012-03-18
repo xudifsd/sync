@@ -44,9 +44,9 @@ struct message *parse_request_head(int fd){
 #ifdef DEBUG
 	fprintf(stderr, "line is %s\n", line);
 #endif
-	if (!strcmp("PUSH\n", line))
+	if (!strcmp("PUSH\n", line) || !strcmp("PUSH\r\n", line))
 		msg.action = PUSH;
-	else if (!strcmp("GET\n", line))
+	else if (!strcmp("GET\n", line) || !strcmp("GET\r\n", line))
 		msg.action = GET;
 	else
 		goto CORRUPT;

@@ -22,26 +22,28 @@ size_t copy_between_fd(int from, int to, int report_fd, off_t expected_size, int
 	for (;;){
 		nr = read_with_timeout(from, buf, BUFSIZ, TIMEOUT);
 		if (nr == 0)
-			return total;
+			break;
 		if (nr < 0){
 			if (die_on_error)
 				fatal("timeout when reading");
 			else
-				return total;
+				break;
 		}
 
 		if (write_in_full(to, buf, nr) < 0){
 			if (die_on_error)
 				fatal("write error");
 			else
-				return total;
+				break;
 		}
 		total += nr;
 
 		/* FIXME we should not report that frequently */
 		if (fp != NULL)
-			fprintf(fp, "transported %.2f%%\n", (total/(double)expected_size)*100);
+			fprintf(fp, "\rtransported %.2f%%", (total/(double)expected_size)*100);
 	}
+	if (fp != NULL)
+		fputc('\n', fp);
 
 	return total;
 }
