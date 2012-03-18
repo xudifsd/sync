@@ -45,7 +45,7 @@ static void make_get(int sock, char *path[]){
 }
 
 int main(int argc, char *argv[]){
-	char *path = NULL;
+	char **path = NULL;
 	char *ip = NULL;
 	int action;
 	short port = 0;
@@ -91,8 +91,8 @@ int main(int argc, char *argv[]){
 				fatal("getopt returned character code 0%o\n", c);
 		}
 	}
+	path = argv + optind + 1;
 
-	path = argv[optind + 1];
 	if (path == NULL)
 		usage(use);
 	if (ip == NULL)
@@ -105,7 +105,7 @@ int main(int argc, char *argv[]){
 		printf("[%llu] deflating\n", (uintmax_t)getpid());
 		fd = deflate(path);
 		if (fd < 0)
-			fatal("failed to use path %s", path);
+			fatal("failed to deflate");
 	}
 
 	sock = connect_to(ip, port);

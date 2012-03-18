@@ -16,6 +16,14 @@ void *xrealloc(void *ptr, size_t size){
 	return p;
 }
 
+char *xstrdup(const char *str){
+	char *p;
+	p = strdup(str);
+	if (p == NULL && str != NULL)
+		fatal("out of memory when invoke strdup");
+	return p;
+}
+
 /**
  * xread auto restart when encounter a restartable error.
  */
