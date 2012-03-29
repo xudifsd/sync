@@ -14,36 +14,6 @@
 
 static char use[] = "sync-client [push|get] <--host server-IP | -h server-IP> [-p port | --port port] <path>";
 
-/**
- * firstly we deflate, only after that can we connect to server, because
- * sometimes the deflate will take much time, and also because the server
- * use the timeout, so after connect we should send file immediately.
- */
-static void make_push(int sock, int fd){
-	struct stat sb;
-	char head[HEAD_LEN];
-
-	if (fstat(fd, &sb) < 0)
-		fatal("fstat failed");
-	if (generate_request_header(PUSH, (uintmax_t)sb.st_size, head, HEAD_LEN) == 0)
-		fatal("can not generate header");
-
-	write_or_die(sock, head, strlen(head));
-
-	copy_between_fd(fd, sock, STDOUT_FILENO, sb.st_size, 1);
-
-	close(sock);
-	printf("Successfully send %lld bytes\n", (uintmax_t)sb.st_size);
-	exit(0);
-}
-
-/**
- * FIXME implement get request maker
- */
-static void make_get(int sock, char *path[]){
-	exit(0);
-}
-
 int main(int argc, char *argv[]){
 	char **path = NULL;
 	char *ip = NULL;
@@ -100,7 +70,11 @@ int main(int argc, char *argv[]){
 	if (port == 0)
 		port = SERVER_PORT;
 
-	/* deflate before connect */
+	/**
+	 * firstly we deflate, only after that can we connect to server, because
+	 * sometimes the deflate will take much time, and also because the server
+	 * use the timeout, so after connect we should send file immediately.
+	 */
 	if (action == PUSH){
 		printf("[%llu] deflating\n", (uintmax_t)getpid());
 		fd = deflate(path);
@@ -110,12 +84,12 @@ int main(int argc, char *argv[]){
 
 	sock = connect_to(ip, port);
 	if (sock < 0)
-		fatal("can not connect to %s:%d\n", ip, port);
+		fatal("can not connect to %s:%d", ip, port);
 
 	if (action == PUSH)
 		make_push(sock, fd);
 	else if (action == GET)
-		make_get(sock, argv);
+		make_get(sock, path);
 	else
 		usage(use);
 	exit(0); /* avoid gcc warning */

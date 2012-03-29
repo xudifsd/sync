@@ -5,10 +5,12 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/socket.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
 
+#include "compress.h"
 #include "file.h"
 #include "usage.h"
 #include "wrapper.h"
@@ -30,8 +32,12 @@ struct message{
 };
 
 extern struct message *parse_request_head(int fd);	/* parse head, return expected static allocated structure */
+extern void make_push(int sock, int fd);
+extern void make_get(int sock, char *path[]);
+
 extern char *handle_push(int fd, off_t expected_size);	/* return saved path */
-extern int handle_get(int fd, size_t expected_size);
+extern int handle_get(int sock, size_t expected_size);
+
 extern int generate_request_header(int action, off_t length, char *request, size_t count);
 
 #endif /* MESSAGE_H */
