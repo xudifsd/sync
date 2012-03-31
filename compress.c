@@ -77,6 +77,11 @@ int deflate(char **path){
 		return fd;
 }
 
+/**
+ * FIXME: we should add some mechanism to check the content
+ * of the file, following the principal that
+ * DO NOT TRUST THE OTHERS
+ */
 int inflate(const char *path){
 	pid_t cld;
 	int status;

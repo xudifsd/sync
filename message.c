@@ -154,7 +154,7 @@ void make_get(int sock, char *path[]){
 	else
 		fatal("received file of %lld length, but expect %lld\n", (uintmax_t)sb.st_size, (uintmax_t)msg->length);
 
-	printf("inflating %s\n", recpath);
+	printf("inflating\n");
 	if (inflate(recpath) < 0)
 		fatal("inflate error");
 
@@ -162,6 +162,11 @@ void make_get(int sock, char *path[]){
 	exit(0);
 }
 
+/**
+ * FIXME: both client and server need this function, but client
+ * maybe need it to report progress, maybe change the interface
+ * of this function.
+ */
 char *handle_push(int fd, off_t expected_size){
 	char *template = strdup("/tmp/SYNC_REC_XXXXXX");
 	struct stat sb;
@@ -187,6 +192,17 @@ char *handle_push(int fd, off_t expected_size){
  SIZE_ERROR:
 	fatal("[%llu] received unexpected size", (uintmax_t)getpid());
 	return NULL;
+}
+
+/**
+ * Server start and chdir to directory that specified by argument,
+ * so we should not let client get files that out of the dir.
+ * FIXME: we should also detecte some path like "bar/../../foo"
+ */
+static int is_malicious_path(const char *path){
+	if (!memcmp(path, "..", 2) || !memcmp(path, "/", 1))
+		return 1;
+	return 0;
 }
 
 /**
@@ -222,6 +238,8 @@ int handle_get(int sock, size_t expected_size){
 #endif
 		if (stat(line, &sb))
 			continue; /* ignore missing */
+		if (is_malicious_path(line))
+			continue;
 
 		if (nr >= alloc - 1){ /* the last one for NULL */
 			paths = xrealloc(paths, (alloc*3/2) * sizeof(char *));
