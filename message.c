@@ -197,11 +197,26 @@ char *handle_push(int fd, off_t expected_size){
 /**
  * Server start and chdir to directory that specified by argument,
  * so we should not let client get files that out of the dir.
- * FIXME: we should also detecte some path like "bar/../../foo"
  */
 static int is_malicious_path(const char *path){
-	if (!memcmp(path, "..", 2) || !memcmp(path, "/", 1))
+	const char *p;
+	int i;
+	if (!memcmp(path, "/", 1))
 		return 1;
+	p = path;
+	i = 1;
+	for (;;){
+		if (!memcmp(p, "../", 3) || !memcmp(p, "..", 3))
+			i--;
+		else
+			i++;
+		if (!i)
+			return 1;
+		p = strchr(p, '/');
+		if (!p)
+			break;
+		p++;
+	}
 	return 0;
 }
 

@@ -1,2 +1,9 @@
 * use timeout when parse head, maybe use alarm before parse head
 * use sendfile(), config TCP_CORK flag
+
+* maybe we should give up the protocol of current version, we
+ should use more generic protocol like HTTP to implement this
+ program, so that the server side could be PHP or some higher
+ level language, and we could take advantage of apache to implement
+ concurrent, also the blog space can use php-server, instead of use
+ pure-C.
